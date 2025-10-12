@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Система Управления Складами (ИСУС)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar" id="sidebar">
+      <div class="logo">ИСУС</div>
+      <button class="nav-button active" onclick="showPage('dashboard')"><i class="fas fa-tachometer-alt"></i> Дашборд склада</button>
+      <button class="nav-button" onclick="showPage('input-ore')"><i class="fas fa-cubes"></i> Ввод руды</button>
+      <button class="nav-button" onclick="showPage('input-tools')"><i class="fas fa-tools"></i> Ввод инструментов</button>
+      <button class="nav-button" onclick="showPage('sales')"><i class="fas fa-handshake"></i> Продажа руды</button>
+      <button class="nav-button" onclick="showPage('reports')"><i class="fas fa-chart-bar"></i> Отчёты</button>
+      <button class="nav-button" onclick="showPage('aggregated')"><i class="fas fa-globe"></i> Агрегированный дашборд</button>
+      <button class="nav-button" onclick="showPage('logs')"><i class="fas fa-history"></i> Логи действий</button>
+    </div>
+    <div class="content" id="content">
+      <div class="menu-right">
+        <div class="toggle-sidebar" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+        <div class="icon" onclick="toggleTheme()"><i class="fas fa-moon"></i></div>
+        <div class="icon"><i class="fas fa-bell"></i></div>
+        <div class="icon"><i class="fas fa-user"></i></div>
+      </div>
+
+      <!-- 1. Дашборд склада -->
+      <div id="dashboard" class="page active">
+        <div class="title">Дашборд склада</div>
+        <div class="block chart-placeholder">Диаграмма распределения материалов</div>
+        <input class="input search-input" type="text" placeholder="Поиск по таблице..." onkeyup="filterTable(this, 'dashboard-table')">
+        <table class="table" id="dashboard-table">
+          <thead>
+            <tr>
+              <th>Товар</th>
+              <th>Кол-во (т)</th>
+              <th>Статус</th>
+            </tr>
+          </thead>
+          <tbody id="ores-table-body"></tbody>
+        </table>
+        <div class="button" onclick="showPage('input-ore')"><i class="fas fa-plus"></i> Добавить руду</div>
+        <div class="button" onclick="showPage('input-tools')"><i class="fas fa-plus"></i> Добавить инструменты</div>
+      </div>
+
+      <!-- 2. Ввод данных о руде -->
+      <div id="input-ore" class="page">
+        <div class="title">Ввод данных о добываемой руде</div>
+        <form class="form-group" id="ore-form">
+          <div class="block">
+            <label>Вид руды:</label>
+            <select class="select" name="type" required>
+              <option value="">Выберите руду</option>
+              <option>Железная руда</option>
+              <option>Медная руда</option>
+              <option>Золотая руда</option>
+              <option>Другая</option>
+            </select>
+          </div>
+          <div class="block">
+            <label>Количество (в тоннах):</label>
+            <input class="input" type="number" name="quantity" placeholder="Введите количество" required />
+          </div>
+          <div class="block">
+            <label>Место добычи:</label>
+            <input class="input" type="text" name="location" placeholder="Шахта №1, Карьер №2" />
+          </div>
+          <div class="block">
+            <label>Качество (% содержания):</label>
+            <input class="input" type="number" name="quality" placeholder="Например, 65%" step="0.1" />
+          </div>
+          <div class="block">
+            <label>,**Приоритет**:</label>
+            <select class="select" name="priority">
+              <option>Обычный</option>
+              <option>Высокий</option>
+            </select>
+          </div>
+          <div class="button" onclick="saveOre()"><i class="fas fa-save"></i> Добавить руду</div>
+        </form>
+      </div>
+
+      <!-- 3. Ввод инструментов -->
+      <div id="input-tools" class="page">
+        <div class="title">Ввод инструментов добывания</div>
+        <form class="form-group" id="tool-form">
+          <div class="block">
+            <label>Тип инструмента:</label>
+            <select class="select" name="type" required>
+              <option value="">Выберите инструмент</option>
+              <option>Экскаватор</option>
+              <option>Буровая установка</option>
+              <option>Конвейер</option>
+              <option>Другой</option>
+            </select>
+          </div>
+          <div class="block">
+            <label>Количество:</label>
+            <input class="input" type="number" name="quantity" placeholder="Введите количество" required />
+          </div>
+          <div class="block">
+            <label>Серийный номер:</label>
+            <input class="input" type="text" name="serial_number" placeholder="Введите серийный номер" />
+          </div>
+          <div class="block">
+            <label>Срок службы (месяцы):</label>
+            <input class="input" type="number" name="service_life" placeholder="Введите срок службы" />
+          </div>
+          <div class="button" onclick="saveTool()"><i class="fas fa-save"></i> Добавить инструменты</div>
+        </form>
+      </div>
+
+      <!-- 4. Продажа руды -->
+      <div id="sales" class="page">
+        <div class="title">Продажа руды (Главный офис)</div>
+        <div class="block chart-placeholder">Текущее количество руды (график)</div>
+        <input class="input search-input" type="text" placeholder="Поиск по таблице..." onkeyup="filterTable(this, 'sales-table')">
+        <table class="table" id="sales-table">
+          <thead>
+            <tr>
+              <th>Вид руды</th>
+              <th>Доступно (т)</th>
+              <th>Статус</th>
+            </tr>
+          </thead>
+          <tbody id="sales-ores-table-body"></tbody>
+        </table>
+        <form class="form-group" id="sale-form">
+          <div class="block">
+            <label>Вид руды для продажи:</label>
+            <select class="select" name="ore_type" required>
+              <option value="">Выберите руду</option>
+              <option>Железная руда</option>
+              <option>Медная руда</option>
+            </select>
+          </div>
+          <div class="block">
+            <label>Покупатель:</label>
+            <select class="select" name="buyer">
+              <option>ООО Металл</option>
+              <option>ЗАО Руда</option>
+              <option>Добавить нового</option>
+            </select>
+          </div>
+          <div class="block">
+            <label>Количество (т):</label>
+            <input class="input" type="number" name="quantity" placeholder="Введите количество" required />
+          </div>
+          <div class="block">
+            <label>Статус продажи:</label>
+            <select class="select" name="status">
+              <option>Договаривается</option>
+              <option>Договор подписан</option>
+              <option>Ожидает оплаты</option>
+              <option>Оплачено</option>
+              <option>Списано</option>
+            </select>
+          </div>
+          <div class="block">
+            <label>Прикрепить договор:</label>
+            <input class="input" type="file" accept=".pdf" />
+          </div>
+          <div class="button" onclick="updateSaleStatus()"><i class="fas fa-sync"></i> Обновить статус</div>
+          <div class="button" onclick="confirmSale()"><i class="fas fa-check"></i> Списать (Продать)</div>
+          <div class="status" id="sale-status">Статус: В обработке</div>
+        </form>
+        <div class="block">
+          <div class="title">История продаж</div>
+          <input class="input search-input" type="text" placeholder="Поиск по истории..." onkeyup="filterTable(this, 'history-table')">
+          <table class="table" id="history-table">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Покупатель</th>
+                <th>Руда</th>
+                <th>Количество (т)</th>
+                <th>Статус</th>
+              </tr>
+            </thead>
+            <tbody id="sales-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5. Отчёты и аналитика -->
+      <div id="reports" class="page">
+        <div class="title">Отчёты и аналитика (Завод)</div>
+        <div class="block">
+          <label>Фильтры:</label>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <select class="select">
+              <option>По месяцу</option>
+              <option>По году</option>
+              <option>По инвентарю</option>
+            </select>
+            <input class="input" type="date" />
+            <select class="select">
+              <option>Категория: Руда</option>
+              <option>Категория: Инструменты</option>
+            </select>
+            <select class="select">
+              <option>Все склады</option>
+              <option>Склад №1</option>
+              <option>Склад №2</option>
+            </select>
+          </div>
+        </div>
+        <input class="input search-input" type="text" placeholder="Поиск по таблице..." onkeyup="filterTable(this, 'reports-table')">
+        <table class="table" id="reports-table">
+          <thead>
+            <tr>
+              <th>Период</th>
+              <th>Проданная руда (т)</th>
+              <th>Имеющаяся руда (т)</th>
+              <th>Инвентарь</th>
+            </tr>
+          </thead>
+          <tbody id="reports-table-body"></tbody>
+        </table>
+        <div class="block chart-placeholder">График добычи по месяцам</div>
+        <div class="block chart-placeholder">График динамики остатков</div>
+        <div class="button" onclick="alert('Отчёт сформирован!')"><i class="fas fa-file-alt"></i> Сформировать отчёт</div>
+        <div class="button" onclick="alert('Экспортировано в Excel!')"><i class="fas fa-file-excel"></i> Экспорт в Excel</div>
+        <div class="button" onclick="alert('Экспортировано в PDF!')"><i class="fas fa-file-pdf"></i> Экспорт в PDF</div>
+      </div>
+
+      <!-- 6. Агрегированный дашборд (ЦО) -->
+      <div id="aggregated" class="page">
+        <div class="title">Агрегированный дашборд (ЦО)</div>
+        <div class="block">
+          <label>Фильтр:</label>
+          <select class="select">
+            <option>По складу</option>
+            <option>По предприятию</option>
+            <option>Все вместе</option>
+          </select>
+        </div>
+        <div class="block">
+          <a href="#" onclick="alert('Склад №1: Остаток медной руды 50т')" style="color: var(--secondary-color);">
+            Уведомление: Склад №1 в критическом уровне
+          </a>
+        </div>
+        <div class="block chart-placeholder">Карта с точками предприятий</div>
+        <input class="input search-input" type="text" placeholder="Поиск по таблице..." onkeyup="filterTable(this, 'aggregated-table')">
+        <table class="table" id="aggregated-table">
+          <thead>
+            <tr>
+              <th>Предприятие</th>
+              <th>Руда (т)</th>
+              <th>Статус</th>
+            </tr>
+          </thead>
+          <tbody id="aggregated-table-body"></tbody>
+        </table>
+      </div>
+
+      <!-- 7. Логи действий -->
+      <div id="logs" class="page">
+        <div class="title">Логи действий</div>
+        <input class="input search-input" type="text" placeholder="Поиск по логам..." onkeyup="filterTable(this, 'logs-table')">
+        <table class="table" id="logs-table">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Пользователь</th>
+              <th>Действие</th>
+            </tr>
+          </thead>
+          <tbody id="logs-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <script src="/script.js"></script>
+</body>
+</html>
